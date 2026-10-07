@@ -1,0 +1,831 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* =======================================================
+       COMMON HELPERS
+       ======================================================= */
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn()
+        && request.auth.uid == userId;
+    }
+
+    function validText(value, maxLength) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= maxLength;
+    }
+
+    function validOptionalText(value, maxLength) {
+      return value is string
+        && value.size() <= maxLength;
+    }
+
+    function isParticipant(data) {
+      return signedIn()
+        && (
+          data.userA == request.auth.uid
+          || data.userB == request.auth.uid
+        );
+    }
+
+    function connectionIdFor(userA, userB) {
+      return userA < userB
+        ? userA + "_" + userB
+        : userB + "_" + userA;
+    }
+
+    function connectionExists(userA, userB) {
+      return exists(
+        /databases/$(database)/documents/connections/$(connectionIdFor(userA, userB))
+      );
+    }
+
+    function activeConnection(userA, userB) {
+      return connectionExists(userA, userB)
+        && get(
+          /databases/$(database)/documents/connections/$(connectionIdFor(userA, userB))
+        ).data.status == "accepted";
+    }
+
+    function blockedEitherWay(userA, userB) {
+      return exists(
+        /databases/$(database)/documents/blocks/$(userA + "_" + userB)
+      )
+      || exists(
+        /databases/$(database)/documents/blocks/$(userB + "_" + userA)
+      );
+    }
+
+    function publicFeeling(data) {
+      return data.visibility == "public"
+        && data.status == "active";
+    }
+
+
+    /* =======================================================
+       USERS
+       ======================================================= */
+
+    match /users/{userId} {
+
+      /*
+       * Users can read only their own complete profile.
+       * Public profile information is carried in public
+       * content when needed instead of exposing private
+       * account documents.
+       */
+      allow read: if isOwner(userId);
+
+
+      /*
+       * Account profile creation.
+       */
+      allow create: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.role == "user"
+        && request.resource.data.status == "active"
+        && request.resource.data.createdAt == request.time
+        && validText(request.resource.data.displayName, 50);
+
+
+      /*
+       * User can update their own editable profile fields.
+       *
+       * Sensitive/system fields cannot be changed by the
+       * client.
+       */
+      allow update: if isOwner(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.createdAt == resource.data.createdAt
+        && validText(request.resource.data.displayName, 50)
+        && (
+          !("bio" in request.resource.data)
+          || validOptionalText(request.resource.data.bio, 500)
+        )
+        && (
+          !("mood" in request.resource.data)
+          || validOptionalText(request.resource.data.mood, 50)
+        );
+
+
+      /*
+       * Account deletion is handled separately.
+       * Normal client-side delete is disabled.
+       */
+      allow delete: if false;
+    }
+
+
+    /* =======================================================
+       FEELINGS
+       ======================================================= */
+
+    match /feelings/{feelingId} {
+
+      /*
+       * Public active feelings can be read by authenticated
+       * users.
+       *
+       * Authors can also read their own feeling if its status
+       * later changes.
+       */
+      allow read: if signedIn()
+        && (
+          publicFeeling(resource.data)
+          || resource.data.authorId == request.auth.uid
+        );
+
+
+      /*
+       * Create a new feeling.
+       */
+      allow create: if signedIn()
+
+        && request.resource.data.authorId == request.auth.uid
+
+        && validText(request.resource.data.text, 2000)
+
+        && validText(request.resource.data.authorDisplayName, 50)
+
+        && validText(request.resource.data.mood, 50)
+
+        && validText(request.resource.data.topic, 100)
+
+        && request.resource.data.visibility == "public"
+
+        && request.resource.data.status == "active"
+
+        && request.resource.data.understoodCount == 0
+
+        && request.resource.data.createdAt == request.time
+
+        && request.resource.data.updatedAt == request.time
+
+        /*
+         * Song fields are optional.
+         *
+         * We store a permitted external music URL rather than
+         * uploading MP3/music files into Firebase Storage.
+         */
+        && (
+          !("hasSong" in request.resource.data)
+          || request.resource.data.hasSong is bool
+        )
+
+        && (
+          !("songProvider" in request.resource.data)
+          || validOptionalText(
+               request.resource.data.songProvider,
+               30
+             )
+        )
+
+        && (
+          !("songTitle" in request.resource.data)
+          || validOptionalText(
+               request.resource.data.songTitle,
+               200
+             )
+        )
+
+        && (
+          !("songUrl" in request.resource.data)
+          || validOptionalText(
+               request.resource.data.songUrl,
+               2000
+             )
+        );
+
+
+      /*
+       * Only the author can edit their own feeling.
+       *
+       * Security/system fields remain protected.
+       */
+      allow update: if signedIn()
+
+        && resource.data.authorId == request.auth.uid
+
+        && request.resource.data.authorId == resource.data.authorId
+
+        && request.resource.data.authorDisplayName
+           == resource.data.authorDisplayName
+
+        && request.resource.data.visibility
+           == resource.data.visibility
+
+        && request.resource.data.status
+           == resource.data.status
+
+        && request.resource.data.createdAt
+           == resource.data.createdAt
+
+        && request.resource.data.understoodCount
+           == resource.data.understoodCount
+
+        && validText(request.resource.data.text, 2000)
+
+        && validText(request.resource.data.mood, 50)
+
+        && validText(request.resource.data.topic, 100)
+
+        && request.resource.data.updatedAt == request.time
+
+        && (
+          !("hasSong" in request.resource.data)
+          || request.resource.data.hasSong is bool
+        )
+
+        && (
+          !("songProvider" in request.resource.data)
+          || validOptionalText(
+               request.resource.data.songProvider,
+               30
+             )
+        )
+
+        && (
+          !("songTitle" in request.resource.data)
+          || validOptionalText(
+               request.resource.data.songTitle,
+               200
+             )
+        )
+
+        && (
+          !("songUrl" in request.resource.data)
+          || validOptionalText(
+               request.resource.data.songUrl,
+               2000
+             );
+
+
+      /*
+       * Authors can delete their own feelings.
+       */
+      allow delete: if signedIn()
+        && resource.data.authorId == request.auth.uid;
+
+
+      /* =====================================================
+         I UNDERSTAND
+         ===================================================== */
+
+      match /understands/{userId} {
+
+        /*
+         * Authenticated users can see reaction documents
+         * for public active feelings.
+         */
+        allow read: if signedIn()
+          && publicFeeling(
+               get(
+                 /databases/$(database)/documents/feelings/$(feelingId)
+               ).data
+             );
+
+
+        /*
+         * A user can create only their own reaction.
+         */
+        allow create: if signedIn()
+
+          && request.auth.uid == userId
+
+          && request.resource.data.userId == request.auth.uid
+
+          && request.resource.data.createdAt == request.time
+
+          && publicFeeling(
+               get(
+                 /databases/$(database)/documents/feelings/$(feelingId)
+               ).data
+             )
+
+          && !blockedEitherWay(
+               request.auth.uid,
+               get(
+                 /databases/$(database)/documents/feelings/$(feelingId)
+               ).data.authorId
+             );
+
+
+        /*
+         * A user can remove only their own reaction.
+         */
+        allow delete: if signedIn()
+          && request.auth.uid == userId;
+
+
+        allow update: if false;
+      }
+
+
+      /* =====================================================
+         RESPONSES
+         ===================================================== */
+
+      match /responses/{responseId} {
+
+        allow read: if signedIn()
+          && publicFeeling(
+               get(
+                 /databases/$(database)/documents/feelings/$(feelingId)
+               ).data
+             );
+
+
+        /*
+         * Create response.
+         */
+        allow create: if signedIn()
+
+          && publicFeeling(
+               get(
+                 /databases/$(database)/documents/feelings/$(feelingId)
+               ).data
+             )
+
+          && request.resource.data.userId == request.auth.uid
+
+          && validText(request.resource.data.text, 2000)
+
+          && request.resource.data.status == "active"
+
+          && request.resource.data.createdAt == request.time
+
+          && !blockedEitherWay(
+               request.auth.uid,
+               get(
+                 /databases/$(database)/documents/feelings/$(feelingId)
+               ).data.authorId
+             );
+
+
+        /*
+         * A response author can edit their own response.
+         */
+        allow update: if signedIn()
+
+          && resource.data.userId == request.auth.uid
+
+          && request.resource.data.userId
+             == resource.data.userId
+
+          && request.resource.data.status
+             == resource.data.status
+
+          && validText(request.resource.data.text, 2000);
+
+
+        /*
+         * A response author can delete their own response.
+         */
+        allow delete: if signedIn()
+          && resource.data.userId == request.auth.uid;
+      }
+    }
+
+
+    /* =======================================================
+       UNDERSTAND / RESPONSE COUNTS
+       =======================================================
+
+       We deliberately do not allow the browser to modify
+       aggregate counters on the parent feeling document.
+
+       Counts are derived from the subcollections.
+       This prevents users from artificially changing counts.
+       ======================================================= */
+
+
+    /* =======================================================
+       CONNECTIONS
+       ======================================================= */
+
+    match /connections/{connectionId} {
+
+      /*
+       * Participants can read their own connection.
+       */
+      allow read: if signedIn()
+        && isParticipant(resource.data);
+
+
+      /*
+       * A user can create a connection request involving
+       * themselves.
+       *
+       * Connection is FREE in V1.
+       */
+      allow create: if signedIn()
+
+        && request.resource.data.userA is string
+        && request.resource.data.userB is string
+
+        && request.resource.data.userA
+           != request.resource.data.userB
+
+        && (
+          request.resource.data.userA == request.auth.uid
+          || request.resource.data.userB == request.auth.uid
+        )
+
+        && request.resource.data.requesterId
+           == request.auth.uid
+
+        && request.resource.data.status == "pending"
+
+        && request.resource.data.createdAt == request.time
+
+        && request.resource.data.updatedAt == request.time
+
+        && !blockedEitherWay(
+             request.resource.data.userA,
+             request.resource.data.userB
+           );
+
+
+      /*
+       * Recipient can accept.
+       * Requester can cancel.
+       *
+       * No participant can change the users or requester.
+       */
+      allow update: if signedIn()
+
+        && resource.data.userA
+           == request.resource.data.userA
+
+        && resource.data.userB
+           == request.resource.data.userB
+
+        && resource.data.requesterId
+           == request.resource.data.requesterId
+
+        && request.resource.data.updatedAt == request.time
+
+        && (
+          (
+            resource.data.status == "pending"
+            && request.resource.data.status == "accepted"
+            && request.auth.uid
+               != resource.data.requesterId
+          )
+          ||
+          (
+            resource.data.status == "pending"
+            && request.resource.data.status == "cancelled"
+            && request.auth.uid
+               == resource.data.requesterId
+          )
+          ||
+          (
+            resource.data.status == "accepted"
+            && request.resource.data.status == "ended"
+            && isParticipant(resource.data)
+          )
+        );
+
+
+      /*
+       * Connection documents are not physically deleted
+       * by normal users.
+       */
+      allow delete: if false;
+    }
+
+
+    /* =======================================================
+       CHATS
+       ======================================================= */
+
+    match /chats/{chatId} {
+
+      /*
+       * A chat can exist only for an accepted connection.
+       */
+      allow read: if signedIn()
+
+        && isParticipant(resource.data)
+
+        && activeConnection(
+             resource.data.userA,
+             resource.data.userB
+           );
+
+
+      /*
+       * A participant can create the chat document only when
+       * the corresponding connection has already been
+       * accepted.
+       */
+      allow create: if signedIn()
+
+        && request.resource.data.userA is string
+        && request.resource.data.userB is string
+
+        && request.resource.data.userA
+           != request.resource.data.userB
+
+        && (
+          request.resource.data.userA == request.auth.uid
+          || request.resource.data.userB == request.auth.uid
+        )
+
+        && activeConnection(
+             request.resource.data.userA,
+             request.resource.data.userB
+           )
+
+        && !blockedEitherWay(
+             request.resource.data.userA,
+             request.resource.data.userB
+           )
+
+        && request.resource.data.createdAt == request.time;
+
+
+      /*
+       * Participants can update only non-security chat
+       * metadata.
+       */
+      allow update: if signedIn()
+
+        && isParticipant(resource.data)
+
+        && activeConnection(
+             resource.data.userA,
+             resource.data.userB
+           )
+
+        && request.resource.data.userA
+           == resource.data.userA
+
+        && request.resource.data.userB
+           == resource.data.userB;
+
+
+      allow delete: if false;
+
+
+      /* =====================================================
+         CHAT MESSAGES
+         ===================================================== */
+
+      match /messages/{messageId} {
+
+        allow read: if signedIn()
+
+          && exists(
+               /databases/$(database)/documents/chats/$(chatId)
+             )
+
+          && (
+            get(
+              /databases/$(database)/documents/chats/$(chatId)
+            ).data.userA == request.auth.uid
+
+            ||
+            get(
+              /databases/$(database)/documents/chats/$(chatId)
+            ).data.userB == request.auth.uid
+          )
+
+          && activeConnection(
+               get(
+                 /databases/$(database)/documents/chats/$(chatId)
+               ).data.userA,
+
+               get(
+                 /databases/$(database)/documents/chats/$(chatId)
+               ).data.userB
+             );
+
+
+        /*
+         * Only a participant can send a message.
+         */
+        allow create: if signedIn()
+
+          && request.resource.data.senderId
+             == request.auth.uid
+
+          && validText(
+               request.resource.data.text,
+               5000
+             )
+
+          && request.resource.data.createdAt
+             == request.time
+
+          && exists(
+               /databases/$(database)/documents/chats/$(chatId)
+             )
+
+          && (
+            get(
+              /databases/$(database)/documents/chats/$(chatId)
+            ).data.userA == request.auth.uid
+
+            ||
+
+            get(
+              /databases/$(database)/documents/chats/$(chatId)
+            ).data.userB == request.auth.uid
+          )
+
+          && activeConnection(
+               get(
+                 /databases/$(database)/documents/chats/$(chatId)
+               ).data.userA,
+
+               get(
+                 /databases/$(database)/documents/chats/$(chatId)
+               ).data.userB
+             )
+
+          && !blockedEitherWay(
+               get(
+                 /databases/$(database)/documents/chats/$(chatId)
+               ).data.userA,
+
+               get(
+                 /databases/$(database)/documents/chats/$(chatId)
+               ).data.userB
+             );
+
+
+        allow update: if false;
+
+        allow delete: if false;
+      }
+    }
+
+
+    /* =======================================================
+       BLOCKS
+       ======================================================= */
+
+    match /blocks/{blockId} {
+
+      /*
+       * A user can read their own block records.
+       */
+      allow read: if signedIn()
+        && resource.data.blockerId == request.auth.uid;
+
+
+      /*
+       * User can block another user.
+       */
+      allow create: if signedIn()
+
+        && request.resource.data.blockerId
+           == request.auth.uid
+
+        && request.resource.data.blockedUserId is string
+
+        && request.resource.data.blockedUserId
+           != request.auth.uid
+
+        && request.resource.data.createdAt == request.time;
+
+
+      /*
+       * User can remove their own block.
+       */
+      allow delete: if signedIn()
+        && resource.data.blockerId
+           == request.auth.uid;
+
+
+      allow update: if false;
+    }
+
+
+    /* =======================================================
+       REPORTS
+       ======================================================= */
+
+    match /reports/{reportId} {
+
+      /*
+       * Any authenticated user can create a report.
+       */
+      allow create: if signedIn()
+
+        && request.resource.data.reporterId
+           == request.auth.uid
+
+        && validText(
+             request.resource.data.targetId,
+             200
+           )
+
+        && validText(
+             request.resource.data.targetType,
+             50
+           )
+
+        && validText(
+             request.resource.data.reason,
+             1000
+           )
+
+        && request.resource.data.status == "open"
+
+        && request.resource.data.createdAt == request.time;
+
+
+      /*
+       * A reporter can see their own reports.
+       *
+       * Admin access will be handled later through a properly
+       * controlled administrative environment.
+       */
+      allow read: if signedIn()
+        && resource.data.reporterId == request.auth.uid;
+
+
+      /*
+       * Normal users cannot change or delete reports.
+       */
+      allow update: if false;
+
+      allow delete: if false;
+    }
+
+
+    /* =======================================================
+       AD UNLOCKS
+       =======================================================
+
+       V1 does NOT use rewarded-ad unlocks.
+
+       Client-side creation is therefore completely disabled.
+       ======================================================= */
+
+    match /adUnlocks/{unlockId} {
+
+      allow read: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+
+    /* =======================================================
+       SUBSCRIPTIONS
+       =======================================================
+
+       Subscription monetization is NOT active in V1.
+       ======================================================= */
+
+    match /subscriptions/{subscriptionId} {
+
+      allow read: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+
+    /* =======================================================
+       FUTURE NOTIFICATIONS
+       ======================================================= */
+
+    match /notifications/{notificationId} {
+
+      /*
+       * Client-created notifications are not allowed.
+       *
+       * A future trusted backend can create notifications.
+       */
+      allow read: if signedIn()
+        && resource.data.userId == request.auth.uid;
+
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+
+    /* =======================================================
+       DENY EVERYTHING ELSE
+       ======================================================= */
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
