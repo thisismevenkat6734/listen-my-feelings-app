@@ -1,0 +1,31 @@
+{
+  "name": "Listen My Feelings",
+  "short_name": "My Feelings",
+  "description": "A safe space to express your feelings, understand others, and build meaningful human connections.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#080611",
+  "theme_color": "#8b5cf6",
+  "categories": [
+    "social",
+    "lifestyle"
+  ],
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
