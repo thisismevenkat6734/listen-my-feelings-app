@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <meta
+        name="theme-color"
+        content="#080611"
+    >
+
+    <meta
+        name="description"
+        content="Listen My Feelings — share feelings, understand others and build meaningful connections."
+    >
+
+    <meta
+        name="color-scheme"
+        content="dark"
+    >
+
+    <link rel="manifest" href="manifest.json">
+
+    <title>Home — Listen My Feelings</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* =====================================================
+           LISTEN MY FEELINGS — APP SHELL
+           ===================================================== */
+
+        :root {
+            --app-bg: #080611;
+            --app-surface: rgba(22, 17, 38, 0.82);
+            --app-surface-2: rgba(30, 23, 49, 0.9);
+            --app-border: rgba(255, 255, 255, 0.09);
+            --app-border-light: rgba(255, 255, 255, 0.14);
+            --app-text: #f8f5ff;
+            --app-muted: #a9a2bb;
+            --app-purple: #8b5cf6;
+            --app-pink: #ec4899;
+            --app-cyan: #22d3ee;
+            --app-danger: #fb7185;
+            --app-radius: 22px;
+            --app-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body.app-page {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 10% 0%,
+                    rgba(139, 92, 246, 0.16),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 10%,
+                    rgba(236, 72, 153, 0.12),
+                    transparent 28%
+                ),
+                var(--app-bg);
+            color: var(--app-text);
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        body.app-page a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .app-background {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .app-background::before,
+        .app-background::after {
+            content: "";
+            position: absolute;
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.16;
+        }
+
+        .app-background::before {
+            top: -140px;
+            left: -100px;
+            background: #8b5cf6;
+        }
+
+        .app-background::after {
+            right: -120px;
+            top: 35%;
+            background: #ec4899;
+        }
+
+
+        /* =====================================================
+           TOP APP BAR
+           ===================================================== */
+
+        .app-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding:
+                0 max(18px, env(safe-area-inset-right))
+                0 max(18px, env(safe-area-inset-left));
+            background: rgba(8, 6, 17, 0.82);
+            border-bottom: 1px solid var(--app-border);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+        }
+
+        .app-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .app-brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            position: relative;
+            display: grid;
+            place-items: center;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--app-purple),
+                    var(--app-pink)
+                );
+            box-shadow:
+                0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+
+        .app-brand-mark::after {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border: 2px solid white;
+            border-radius: 50%;
+        }
+
+        .app-brand-name {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+
+        .app-brand-name strong {
+            font-size: 15px;
+        }
+
+        .app-brand-name span {
+            margin-top: 4px;
+            font-size: 10px;
+            color: var(--app-muted);
+        }
+
+        .app-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-button {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--app-border);
+            border-radius: 14px;
+            color: var(--app-text);
+            background: rgba(255, 255, 255, 0.04);
+            transition:
+                transform 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .icon-button:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .notification-button {
+            position: relative;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #fb7185;
+            box-shadow: 0 0 0 3px #080611;
+        }
+
+
+        /* =====================================================
+           MAIN LAYOUT
+           ===================================================== */
+
+        .app-layout {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+            padding:
+                22px 18px
+                calc(100px + env(safe-area-inset-bottom));
+            display: grid;
+            grid-template-columns: 220px minmax(0, 620px) 250px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .app-sidebar,
+        .app-rightbar {
+            position: sticky;
+            top: 90px;
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+           ===================================================== */
+
+        .side-panel {
+            padding: 10px;
+            border: 1px solid var(--app-border);
+            border-radius: 22px;
+            background: var(--app-surface);
+            box-shadow: var(--app-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .side-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .side-nav-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 13px 14px;
+            border: 0;
+            border-radius: 15px;
+            color: var(--app-muted);
+            background: transparent;
+            text-align: left;
+            transition:
+                color 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .side-nav-button:hover,
+        .side-nav-button.active {
+            color: var(--app-text);
+            background: rgba(139, 92, 246, 0.13);
+        }
+
+        .side-nav-icon {
+            width: 23px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .side-nav-label {
+            font-size: 14px;
+            font-weight: 650;
+        }
+
+        .side-create {
+            margin-top: 12px;
+            width: 100%;
+            border: 0;
+            border-radius: 15px;
+            padding: 13px 15px;
+            color: white;
+            font-weight: 750;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--app-purple),
+                    var(--app-pink)
+                );
+            box-shadow:
+                0 12px 30px rgba(139, 92, 246, 0.2);
+        }
+
+        .side-note {
+            margin-top: 14px;
+            padding: 13px;
+            border-top: 1px solid var(--app-border);
+            color: var(--app-muted);
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           FEED HEADER
+           ===================================================== */
+
+        .feed-column {
+            min-width: 0;
+        }
+
+        .feed-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .feed-heading h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .feed-heading p {
+            margin: 5px 0 0;
+            color: var(--app-muted);
+            font-size: 12px;
+        }
+
+        .feed-filter {
+            border: 1px solid var(--app-border);
+            border-radius: 12px;
+            padding: 9px 11px;
+            color: var(--app-muted);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+
+        /* =====================================================
+           STORY / MOOD ROW
+           ===================================================== */
+
+        .mood-strip {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 3px 1px 15px;
+            scrollbar-width: none;
+        }
+
+        .mood-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mood-chip {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 13px;
+            border: 1px solid var(--app-border);
+            border-radius: 999px;
+            color: var(--app-muted);
+            background: rgba(255, 255, 255, 0.035);
+            font-size: 12px;
+        }
+
+        .mood-chip.active {
+            color: white;
+            border-color: rgba(139, 92, 246, 0.42);
+            background: rgba(139, 92, 246, 0.14);
+        }
+
+
+        /* =====================================================
+           CREATE CARD
+           ===================================================== */
+
+        .quick-create {
+            margin-bottom: 16px;
+            padding: 17px;
+            border: 1px solid var(--app-border);
+            border-radius: var(--app-radius);
+            background: var(--app-surface);
+            box-shadow: var(--app-shadow);
+        }
+
+        .quick-create-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 43px;
+            height: 43px;
+            flex: 0 0 43px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: white;
+            font-weight: 800;
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b5cf6,
+                    #ec4899
+                );
+        }
+
+        .quick-create-button {
+            flex: 1;
+            min-width: 0;
+            border: 1px solid var(--app-border);
+            border-radius: 15px;
+            padding: 12px 14px;
+            color: var(--app-muted);
+            background: rgba(255, 255, 255, 0.035);
+            text-align: left;
+        }
+
+        .quick-create-actions {
+            display: flex;
+            gap: 7px;
+            margin-top: 13px;
+            padding-top: 12px;
+            border-top: 1px solid var(--app-border);
+        }
+
+        .quick-action {
+            flex: 1;
+            border: 0;
+            border-radius: 11px;
+            padding: 9px 5px;
+            color: var(--app-muted);
+            background: transparent;
+            font-size: 11px;
+        }
+
+        .quick-action:hover {
+            color: var(--app-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+
+        /* =====================================================
+           FEELING CARD
+           ===================================================== */
+
+        .feeling-card {
+            margin-bottom: 16px;
+            padding: 18px;
+            border: 1px solid var(--app-border);
+            border-radius: var(--app-radius);
+            background: var(--app-surface);
+            box-shadow: var(--app-shadow);
+        }
+
+        .feeling-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .feeling-author {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            min-width: 0;
+        }
+
+        .feeling-author-avatar {
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: white;
+            font-size: 13px;
+            font-weight: 800;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(139, 92, 246, 0.9),
+                    rgba(34, 211, 238, 0.8)
+                );
+        }
+
+        .feeling-author-info {
+            min-width: 0;
+        }
+
+        .feeling-author-info strong {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .feeling-meta {
+            margin-top: 3px;
+            color: var(--app-muted);
+            font-size: 10px;
+        }
+
+        .more-button {
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 10px;
+            color: var(--app-muted);
+            background: transparent;
+        }
+
+        .feeling-text {
+            margin: 17px 0;
+            color: #eee9f8;
+            font-size: 15px;
+            line-height: 1.75;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .feeling-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 13px;
+        }
+
+        .feeling-tag {
+            padding: 5px 9px;
+            border-radius: 999px;
+            color: #c7b9ee;
+            background: rgba(139, 92, 246, 0.11);
+            font-size: 10px;
+        }
+
+        .song-card {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 15px;
+            padding: 11px;
+            border: 1px solid var(--app-border);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .song-icon {
+            width: 35px;
+            height: 35px;
+            display: grid;
+            place-items: center;
+            border-radius: 11px;
+            color: white;
+            background:
+                linear-gradient(
+                    135deg,
+                    #ec4899,
+                    #8b5cf6
+                );
+        }
+
+        .song-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .song-info strong {
+            display: block;
+            font-size: 12px;
+        }
+
+        .song-info small {
+            display: block;
+            margin-top: 2px;
+            color: var(--app-muted);
+            font-size: 10px;
+        }
+
+        .song-open {
+            border: 0;
+            border-radius: 9px;
+            padding: 7px 9px;
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 10px;
+        }
+
+        .feeling-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+            padding-top: 12px;
+            border-top: 1px solid var(--app-border);
+        }
+
+        .feeling-action {
+            min-width: 0;
+            border: 0;
+            border-radius: 12px;
+            padding: 10px 5px;
+            color: var(--app-muted);
+            background: transparent;
+            font-size: 11px;
+        }
+
+        .feeling-action:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .feeling-action.understood {
+            color: #d8c9ff;
+            background: rgba(139, 92, 246, 0.09);
+        }
+
+        .action-icon {
+            margin-right: 4px;
+            font-size: 14px;
+        }
+
+
+        /* =====================================================
+           AD SPACE
+           ===================================================== */
+
+        .app-ad {
+            min-height: 74px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            color: #716b7d;
+            background: rgba(255, 255, 255, 0.018);
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+
+        /* =====================================================
+           RIGHT PANEL
+           ===================================================== */
+
+        .profile-mini {
+            padding: 17px;
+            border: 1px solid var(--app-border);
+            border-radius: 22px;
+            background: var(--app-surface);
+            box-shadow: var(--app-shadow);
+        }
+
+        .profile-mini-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-mini-avatar {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b5cf6,
+                    #ec4899
+                );
+            font-weight: 800;
+        }
+
+        .profile-mini-name {
+            min-width: 0;
+        }
+
+        .profile-mini-name strong {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        .profile-mini-name small {
+            color: var(--app-muted);
+            font-size: 10px;
+        }
+
+        .profile-mini-link {
+            display: block;
+            margin-top: 13px;
+            padding-top: 12px;
+            border-top: 1px solid var(--app-border);
+            color: #c9b7f8;
+            font-size: 11px;
+        }
+
+        .side-heading {
+            margin: 22px 5px 9px;
+            color: var(--app-muted);
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: 0.9px;
+            text-transform: uppercase;
+        }
+
+        .topic-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .topic-button {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 10px;
+            border: 0;
+            border-radius: 10px;
+            color: var(--app-muted);
+            background: transparent;
+            font-size: 11px;
+            text-align: left;
+        }
+
+        .topic-button:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+
+        /* =====================================================
+           MOBILE BOTTOM NAV
+           ===================================================== */
+
+        .mobile-bottom-nav {
+            position: fixed;
+            left: 10px;
+            right: 10px;
+            bottom: max(10px, env(safe-area-inset-bottom));
+            z-index: 200;
+            height: 65px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            align-items: center;
+            padding: 5px;
+            border: 1px solid var(--app-border-light);
+            border-radius: 21px;
+            background: rgba(15, 11, 27, 0.9);
+            box-shadow:
+                0 18px 55px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+        }
+
+        .mobile-nav-button {
+            height: 53px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            border: 0;
+            border-radius: 15px;
+            color: var(--app-muted);
+            background: transparent;
+            font-size: 10px;
+        }
+
+        .mobile-nav-button span:first-child {
+            font-size: 19px;
+        }
+
+        .mobile-nav-button.active {
+            color: white;
+            background: rgba(139, 92, 246, 0.13);
+        }
+
+        .mobile-create {
+            width: 46px;
+            height: 46px;
+            margin: auto;
+            border-radius: 15px;
+            color: white;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--app-purple),
+                    var(--app-pink)
+                );
+            box-shadow:
+                0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+
+
+        /* =====================================================
+           APP MODAL
+           ===================================================== */
+
+        .app-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        .app-modal-backdrop.visible {
+            display: flex;
+        }
+
+        .app-modal {
+            width: min(620px, 100%);
+            max-height: min(90vh, 760px);
+            overflow-y: auto;
+            padding: 20px;
+            border: 1px solid var(--app-border-light);
+            border-radius: 25px;
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(28, 21, 45, 0.98),
+                    rgba(14, 11, 25, 0.99)
+                );
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.55);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .modal-header p {
+            margin: 5px 0 0;
+            color: var(--app-muted);
+            font-size: 11px;
+        }
+
+        .modal-close {
+            width: 38px;
+            height: 38px;
+            border: 0;
+            border-radius: 12px;
+            color: var(--app-muted);
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 20px;
+        }
+
+        .feeling-form {
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+        }
+
+        .feeling-form label {
+            color: #ddd7e9;
+            font-size: 11px;
+            font-weight: 650;
+        }
+
+        .feeling-form textarea,
+        .feeling-form input,
+        .feeling-form select {
+            width: 100%;
+            border: 1px solid var(--app-border);
+            border-radius: 14px;
+            outline: none;
+            color: white;
+            background: rgba(255, 255, 255, 0.045);
+        }
+
+        .feeling-form textarea {
+            min-height: 155px;
+            resize: vertical;
+            padding: 14px;
+            line-height: 1.65;
+        }
+
+        .feeling-form input,
+        .feeling-form select {
+            height: 46px;
+            padding: 0 13px;
+        }
+
+        .feeling-form textarea:focus,
+        .feeling-form input:focus,
+        .feeling-form select:focus {
+            border-color: rgba(139, 92, 246, 0.65);
+            box-shadow:
+                0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+            margin-top: 5px;
+        }
+
+        .secondary-app-button,
+        .primary-app-button {
+            border: 0;
+            border-radius: 13px;
+            padding: 11px 16px;
+            font-weight: 700;
+        }
+
+        .secondary-app-button {
+            color: var(--app-muted);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .primary-app-button {
+            color: white;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--app-purple),
+                    var(--app-pink)
+                );
+        }
+
+
+        /* =====================================================
+           LOADING / EMPTY
+           ===================================================== */
+
+        .feed-status {
+            padding: 35px 15px;
+            border: 1px solid var(--app-border);
+            border-radius: var(--app-radius);
+            color: var(--app-muted);
+            background: rgba(255, 255, 255, 0.025);
+            text-align: center;
+        }
+
+        .feed-status strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--app-text);
+            font-size: 14px;
+        }
+
+        .feed-status span {
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 1050px) {
+
+            .app-layout {
+                grid-template-columns:
+                    190px
+                    minmax(0, 620px);
+            }
+
+            .app-rightbar {
+                display: none;
+            }
+        }
+
+
+        @media (max-width: 760px) {
+
+            .app-topbar {
+                height: 62px;
+            }
+
+            .app-brand-name span {
+                display: none;
+            }
+
+            .app-layout {
+                display: block;
+                padding:
+                    17px 12px
+                    calc(95px + env(safe-area-inset-bottom));
+            }
+
+            .app-sidebar {
+                display: none;
+            }
+
+            .feed-heading h1 {
+                font-size: 21px;
+            }
+
+            .feeling-card {
+                padding: 15px;
+                border-radius: 19px;
+            }
+
+            .quick-create {
+                padding: 14px;
+            }
+
+            .app-ad {
+                min-height: 62px;
+            }
+        }
+
+
+        @media (min-width: 761px) {
+
+            .mobile-bottom-nav {
+                display: none;
+            }
+        }
+
+
+        @media (max-width: 430px) {
+
+            .app-topbar {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .app-layout {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .app-brand-mark {
+                width: 31px;
+                height: 31px;
+                border-radius: 10px;
+            }
+
+            .icon-button {
+                width: 39px;
+                height: 39px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feeling-actions {
+                gap: 2px;
+            }
+
+            .feeling-action {
+                font-size: 10px;
+            }
+
+            .mobile-bottom-nav {
+                left: 7px;
+                right: 7px;
+            }
+        }
+
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="app-page">
+
+    <!-- =========================================================
+         BACKGROUND
+         ========================================================= -->
+
+    <div
+        class="app-background"
+        aria-hidden="true"
+    ></div>
+
+
+    <!-- =========================================================
+         TOP BAR
+         ========================================================= -->
+
+    <header class="app-topbar">
+
+        <a
+            href="app.html"
+            class="app-brand"
+            aria-label="Listen My Feelings home"
+        >
+            <span class="app-brand-mark"></span>
+
+            <span class="app-brand-name">
+                <strong>Listen My Feelings</strong>
+                <span>A place to be heard</span>
+            </span>
+        </a>
+
+
+        <div class="app-top-actions">
+
+            <button
+                type="button"
+                class="icon-button"
+                id="searchButton"
+                aria-label="Search"
+            >
+                ⌕
+            </button>
+
+            <button
+                type="button"
+                class="icon-button notification-button"
+                id="notificationButton"
+                aria-label="Notifications"
+            >
+                ♡
+                <span
+                    class="notification-dot"
+                    aria-hidden="true"
+                ></span>
+            </button>
+
+            <button
+                type="button"
+                class="icon-button"
+                id="profileButton"
+                aria-label="Profile"
+            >
+                ◉
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+         APP LAYOUT
+         ========================================================= -->
+
+    <main class="app-layout">
+
+
+        <!-- =====================================================
+             LEFT SIDEBAR
+             ===================================================== -->
+
+        <aside class="app-sidebar">
+
+            <div class="side-panel">
+
+                <nav
+                    class="side-nav"
+                    aria-label="Application navigation"
+                >
+
+                    <button
+                        type="button"
+                        class="side-nav-button active"
+                        data-nav="home"
+                    >
+                        <span class="side-nav-icon">⌂</span>
+                        <span class="side-nav-label">Home</span>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="side-nav-button"
+                        data-nav="discover"
+                    >
+                        <span class="side-nav-icon">⌕</span>
+                        <span class="side-nav-label">Discover</span>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="side-nav-button"
+                        data-nav="notifications"
+                    >
+                        <span class="side-nav-icon">♡</span>
+                        <span class="side-nav-label">Notifications</span>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="side-nav-button"
+                        data-nav="messages"
+                    >
+                        <span class="side-nav-icon">✉</span>
+                        <span class="side-nav-label">Messages</span>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="side-nav-button"
+                        data-nav="profile"
+                    >
+                        <span class="side-nav-icon">◉</span>
+                        <span class="side-nav-label">Profile</span>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="side-nav-button"
+                        data-nav="settings"
+                    >
+                        <span class="side-nav-icon">⚙</span>
+                        <span class="side-nav-label">Settings</span>
+                    </button>
+
+                </nav>
+
+
+                <button
+                    type="button"
+                    class="side-create"
+                    id="openCreateFeeling"
+                >
+                    + Share a feeling
+                </button>
+
+
+                <div class="side-note">
+                    You don't have to have the perfect words.
+                    Just say what you feel.
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================================
+             MAIN FEED
+             ===================================================== -->
+
+        <section class="feed-column">
+
+            <div class="feed-heading">
+
+                <div>
+                    <h1>Your space</h1>
+                    <p>
+                        Feelings from people in the community.
+                    </p>
+                </div>
+
+
+                <button
+                    type="button"
+                    class="feed-filter"
+                    id="feedFilter"
+                >
+                    For you ▾
+                </button>
+
+            </div>
+
+
+            <!-- MOODS -->
+
+            <div
+                class="mood-strip"
+                aria-label="Mood filters"
+            >
+
+                <button
+                    type="button"
+                    class="mood-chip active"
+                    data-mood="all"
+                >
+                    ✦ All
+                </button>
+
+                <button
+                    type="button"
+                    class="mood-chip"
+                    data-mood="hopeful"
+                >
+                    ♡ Hopeful
+                </button>
+
+                <button
+                    type="button"
+                    class="mood-chip"
+                    data-mood="reflective"
+                >
+                    ☁ Reflective
+                </button>
+
+                <button
+                    type="button"
+                    class="mood-chip"
+                    data-mood="happy"
+                >
+                    ☀ Happy
+                </button>
+
+                <button
+                    type="button"
+                    class="mood-chip"
+                    data-mood="lonely"
+                >
+                    ◌ Lonely
+                </button>
+
+                <button
+                    type="button"
+                    class="mood-chip"
+                    data-mood="grateful"
+                >
+                    ✦ Grateful
+                </button>
+
+            </div>
+
+
+            <!-- QUICK CREATE -->
+
+            <section class="quick-create">
+
+                <div class="quick-create-top">
+
+                    <div
+                        class="user-avatar"
+                        id="quickCreateAvatar"
+                    >
+                        ?
+                    </div>
+
+                    <button
+                        type="button"
+                        class="quick-create-button"
+                        id="quickCreateButton"
+                    >
+                        What are you feeling today?
+                    </button>
+
+                </div>
+
+
+                <div class="quick-create-actions">
+
+                    <button
+                        type="button"
+                        class="quick-action"
+                        id="quickTextAction"
+                    >
+                        ✦ Feeling
+                    </button>
+
+                    <button
+                        type="button"
+                        class="quick-action"
+                        id="quickMoodAction"
+                    >
+                        ☁ Mood
+                    </button>
+
+                    <button
+                        type="button"
+                        class="quick-action"
+                        id="quickSongAction"
+                    >
+                        ♪ Song
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- AD -->
+
+            <div
+                class="app-ad"
+                aria-label="Advertisement"
+            >
+                Advertisement
+            </div>
+
+
+            <!-- FEED -->
+
+            <div id="feedContainer">
+
+                <div class="feed-status">
+
+                    <strong>
+                        Loading your community...
+                    </strong>
+
+                    <span>
+                        We're getting the latest feelings for you.
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             RIGHT SIDEBAR
+             ===================================================== -->
+
+        <aside class="app-rightbar">
+
+            <div class="profile-mini">
+
+                <div class="profile-mini-top">
+
+                    <div
+                        class="profile-mini-avatar"
+                        id="profileMiniAvatar"
+                    >
+                        ?
+                    </div>
+
+                    <div class="profile-mini-name">
+
+                        <strong id="profileMiniName">
+                            Loading...
+                        </strong>
+
+                        <small id="profileMiniEmail">
+                            Your profile
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <a
+                    href="profile.html"
+                    class="profile-mini-link"
+                >
+                    View your profile →
+                </a>
+
+            </div>
+
+
+            <div class="side-heading">
+                Explore feelings
+            </div>
+
+
+            <div class="topic-list">
+
+                <button
+                    type="button"
+                    class="topic-button"
+                    data-topic="life"
+                >
+                    <span>#life</span>
+                    <span>→</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="topic-button"
+                    data-topic="relationships"
+                >
+                    <span>#relationships</span>
+                    <span>→</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="topic-button"
+                    data-topic="growth"
+                >
+                    <span>#growth</span>
+                    <span>→</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="topic-button"
+                    data-topic="dreams"
+                >
+                    <span>#dreams</span>
+                    <span>→</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="topic-button"
+                    data-topic="family"
+                >
+                    <span>#family</span>
+                    <span>→</span>
+                </button>
+
+            </div>
+
+
+            <div class="side-heading">
+                Your safety
+            </div>
+
+
+            <div class="profile-mini">
+
+                <div
+                    style="
+                        color: var(--app-muted);
+                        font-size: 11px;
+                        line-height: 1.65;
+                    "
+                >
+                    You control who you interact with.
+                    Report or block whenever something
+                    doesn't feel right.
+                </div>
+
+                <a
+                    href="safety.html"
+                    class="profile-mini-link"
+                >
+                    Safety center →
+                </a>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+
+    <!-- =========================================================
+         MOBILE BOTTOM NAV
+         ========================================================= -->
+
+    <nav
+        class="mobile-bottom-nav"
+        aria-label="Mobile navigation"
+    >
+
+        <button
+            type="button"
+            class="mobile-nav-button active"
+            data-nav="home"
+        >
+            <span>⌂</span>
+            <span>Home</span>
+        </button>
+
+
+        <button
+            type="button"
+            class="mobile-nav-button"
+            data-nav="discover"
+        >
+            <span>⌕</span>
+            <span>Discover</span>
+        </button>
+
+
+        <button
+            type="button"
+            class="mobile-nav-button mobile-create"
+            id="mobileCreateFeeling"
+            aria-label="Create feeling"
+        >
+            <span>+</span>
+        </button>
+
+
+        <button
+            type="button"
+            class="mobile-nav-button"
+            data-nav="notifications"
+        >
+            <span>♡</span>
+            <span>Activity</span>
+        </button>
+
+
+        <button
+            type="button"
+            class="mobile-nav-button"
+            data-nav="profile"
+        >
+            <span>◉</span>
+            <span>Profile</span>
+        </button>
+
+    </nav>
+
+
+    <!-- =========================================================
+         CREATE FEELING MODAL
+         ========================================================= -->
+
+    <div
+        class="app-modal-backdrop"
+        id="createFeelingModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="app-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="createFeelingTitle"
+        >
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="createFeelingTitle">
+                        Share a feeling
+                    </h2>
+
+                    <p>
+                        Say what you genuinely feel.
+                    </p>
+                </div>
+
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="closeCreateFeeling"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                id="createFeelingForm"
+                class="feeling-form"
+                novalidate
+            >
+
+                <label for="feelingText">
+                    Your feeling
+                </label>
+
+                <textarea
+                    id="feelingText"
+                    maxlength="2000"
+                    placeholder="Write what is on your mind..."
+                    required
+                ></textarea>
+
+
+                <div class="form-grid">
+
+                    <div class="form-field">
+
+                        <label for="feelingMood">
+                            Mood
+                        </label>
+
+                        <select id="feelingMood" required>
+
+                            <option value="">
+                                Choose a mood
+                            </option>
+
+                            <option value="hopeful">
+                                Hopeful
+                            </option>
+
+                            <option value="reflective">
+                                Reflective
+                            </option>
+
+                            <option value="happy">
+                                Happy
+                            </option>
+
+                            <option value="lonely">
+                                Lonely
+                            </option>
+
+                            <option value="grateful">
+                                Grateful
+                            </option>
+
+                            <option value="confused">
+                                Confused
+                            </option>
+
+                            <option value="calm">
+                                Calm
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="feelingTopic">
+                            Topic
+                        </label>
+
+                        <select id="feelingTopic" required>
+
+                            <option value="">
+                                Choose a topic
+                            </option>
+
+                            <option value="life">
+                                Life
+                            </option>
+
+                            <option value="relationships">
+                                Relationships
+                            </option>
+
+                            <option value="growth">
+                                Growth
+                            </option>
+
+                            <option value="dreams">
+                                Dreams
+                            </option>
+
+                            <option value="family">
+                                Family
+                            </option>
+
+                            <option value="work">
+                                Work
+                            </option>
+
+                            <option value="other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <label for="songTitle">
+                    Optional song
+                </label>
+
+                <input
+                    id="songTitle"
+                    type="text"
+                    maxlength="200"
+                    placeholder="Song title"
+                >
+
+
+                <label for="songUrl">
+                    Song link
+                </label>
+
+                <input
+                    id="songUrl"
+                    type="url"
+                    maxlength="2000"
+                    placeholder="YouTube / Spotify / permitted music link"
+                >
+
+
+                <div class="form-actions">
+
+                    <button
+                        type="button"
+                        class="secondary-app-button"
+                        id="cancelFeeling"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-app-button"
+                        id="publishFeeling"
+                    >
+                        Share feeling
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         APPLICATION ENTRY
+         ========================================================= -->
+
+    <script type="module">
+
+        import "../firebase/firebase-config.js";
+
+        import "./js/auth.js";
+
+        /*
+         * The feed/backend functionality is intentionally loaded
+         * from js/app.js after the application shell is created.
+         */
+
+        const createFeelingModal =
+            document.getElementById(
+                "createFeelingModal"
+            );
+
+        const openCreateFeeling =
+            document.getElementById(
+                "openCreateFeeling"
+            );
+
+        const mobileCreateFeeling =
+            document.getElementById(
+                "mobileCreateFeeling"
+            );
+
+        const quickCreateButton =
+            document.getElementById(
+                "quickCreateButton"
+            );
+
+        const quickTextAction =
+            document.getElementById(
+                "quickTextAction"
+            );
+
+        const quickMoodAction =
+            document.getElementById(
+                "quickMoodAction"
+            );
+
+        const quickSongAction =
+            document.getElementById(
+                "quickSongAction"
+            );
+
+        const closeCreateFeeling =
+            document.getElementById(
+                "closeCreateFeeling"
+            );
+
+        const cancelFeeling =
+            document.getElementById(
+                "cancelFeeling"
+            );
+
+
+        function openFeelingComposer() {
+
+            createFeelingModal?.classList.add(
+                "visible"
+            );
+
+            createFeelingModal?.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.style.overflow =
+                "hidden";
+
+            window.setTimeout(() => {
+
+                document
+                    .getElementById("feelingText")
+                    ?.focus();
+
+            }, 80);
+        }
+
+
+        function closeFeelingComposer() {
+
+            createFeelingModal?.classList.remove(
+                "visible"
+            );
+
+            createFeelingModal?.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.style.overflow =
+                "";
+
+        }
+
+
+        openCreateFeeling?.addEventListener(
+            "click",
+            openFeelingComposer
+        );
+
+
+        mobileCreateFeeling?.addEventListener(
+            "click",
+            openFeelingComposer
+        );
+
+
+        quickCreateButton?.addEventListener(
+            "click",
+            openFeelingComposer
+        );
+
+
+        quickTextAction?.addEventListener(
+            "click",
+            openFeelingComposer
+        );
+
+
+        quickMoodAction?.addEventListener(
+            "click",
+            openFeelingComposer
+        );
+
+
+        quickSongAction?.addEventListener(
+            "click",
+            openFeelingComposer
+        );
+
+
+        closeCreateFeeling?.addEventListener(
+            "click",
+            closeFeelingComposer
+        );
+
+
+        cancelFeeling?.addEventListener(
+            "click",
+            closeFeelingComposer
+        );
+
+
+        createFeelingModal?.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target ===
+                    createFeelingModal
+                ) {
+                    closeFeelingComposer();
+                }
+
+            }
+        );
+
+
+        document.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Escape" &&
+                    createFeelingModal?.classList.contains(
+                        "visible"
+                    )
+                ) {
+                    closeFeelingComposer();
+                }
+
+            }
+        );
+
+
+        /*
+         * Navigation placeholders intentionally point to the
+         * dedicated application pages that we will build next.
+         */
+
+        const navigationTargets = {
+            home: "app.html",
+            discover: "discover.html",
+            notifications: "notifications.html",
+            messages: "messages.html",
+            profile: "profile.html",
+            settings: "settings.html"
+        };
+
+
+        document.querySelectorAll(
+            "[data-nav]"
+        ).forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const target =
+                        button.dataset.nav;
+
+                    const destination =
+                        navigationTargets[target];
+
+                    if (
+                        destination &&
+                        destination !== "app.html"
+                    ) {
+                        window.location.href =
+                            destination;
+                    }
+
+                }
+            );
+
+        });
+
+
+        /*
+         * Header shortcuts.
+         */
+
+        document
+            .getElementById("notificationButton")
+            ?.addEventListener(
+                "click",
+                () => {
+                    window.location.href =
+                        "notifications.html";
+                }
+            );
+
+
+        document
+            .getElementById("profileButton")
+            ?.addEventListener(
+                "click",
+                () => {
+                    window.location.href =
+                        "profile.html";
+                }
+            );
+
+
+        document
+            .getElementById("searchButton")
+            ?.addEventListener(
+                "click",
+                () => {
+                    window.location.href =
+                        "discover.html";
+                }
+            );
+
+
+        /*
+         * Service worker.
+         */
+
+        if (
+            "serviceWorker" in navigator
+        ) {
+
+            window.addEventListener(
+                "load",
+                () => {
+
+                    navigator.serviceWorker
+                        .register(
+                            "./sw.js",
+                            {
+                                scope: "./"
+                            }
+                        )
+                        .catch(() => {});
+
+                }
+            );
+
+        }
+
+    </script>
+
+</body>
+</html>
