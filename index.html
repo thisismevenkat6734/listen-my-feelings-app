@@ -1164,29 +1164,34 @@
 
 
     <!-- =========================================================
-         ENTRY SCRIPT
+         APPLICATION ENTRY
          ========================================================= -->
     <script type="module">
 
-        /*
-         * This file intentionally contains only the public landing
-         * page and authentication UI shell.
-         *
-         * Firebase authentication logic will be connected through
-         * js/auth.js in the next production step.
-         *
-         * No passwords, tokens or sensitive credentials are stored
-         * in Local Storage.
-         */
+        import "./js/auth.js";
 
-        const authModal = document.getElementById("authModal");
 
-        const loginForm = document.getElementById("loginForm");
-        const registerForm = document.getElementById("registerForm");
-        const forgotForm = document.getElementById("forgotForm");
+        /* =====================================================
+           DOM REFERENCES
+           ===================================================== */
 
-        const authTitle = document.getElementById("authTitle");
-        const authSubtitle = document.getElementById("authSubtitle");
+        const authModal =
+            document.getElementById("authModal");
+
+        const loginForm =
+            document.getElementById("loginForm");
+
+        const registerForm =
+            document.getElementById("registerForm");
+
+        const forgotForm =
+            document.getElementById("forgotForm");
+
+        const authTitle =
+            document.getElementById("authTitle");
+
+        const authSubtitle =
+            document.getElementById("authSubtitle");
 
         const authSwitchText =
             document.getElementById("authSwitchText");
@@ -1209,10 +1214,24 @@
         const toastIcon =
             document.getElementById("toastIcon");
 
+
+        /* =====================================================
+           STATE
+           ===================================================== */
+
         let currentAuthMode = "login";
 
+        let authStateReady = false;
 
-        function showToast(message, type = "success") {
+
+        /* =====================================================
+           TOAST
+           ===================================================== */
+
+        function showToast(
+            message,
+            type = "success"
+        ) {
 
             if (!toast || !toastMessage) {
                 return;
@@ -1222,7 +1241,9 @@
 
             if (toastIcon) {
                 toastIcon.textContent =
-                    type === "error" ? "!" : "✓";
+                    type === "error"
+                        ? "!"
+                        : "✓";
             }
 
             toast.classList.add("visible");
@@ -1233,85 +1254,128 @@
 
             window.__lmfToastTimer =
                 window.setTimeout(() => {
-                    toast.classList.remove("visible");
-                }, 3500);
+
+                    toast.classList.remove(
+                        "visible"
+                    );
+
+                }, 4000);
         }
 
+
+        /* =====================================================
+           AUTH MODE
+           ===================================================== */
 
         function setAuthMode(mode) {
 
             currentAuthMode = mode;
 
-            loginForm.classList.add("hidden");
-            registerForm.classList.add("hidden");
-            forgotForm.classList.add("hidden");
+            loginForm?.classList.add("hidden");
+            registerForm?.classList.add("hidden");
+            forgotForm?.classList.add("hidden");
+
 
             if (mode === "register") {
 
-                registerForm.classList.remove("hidden");
-
-                authTitle.textContent =
-                    "Create your space";
-
-                authSubtitle.textContent =
-                    "A place for honest feelings and meaningful connections.";
-
-                authSwitchText.textContent =
-                    "Already have an account?";
-
-                authSwitchButton.textContent =
-                    "Log in";
-
-                authSwitchButton.removeAttribute(
-                    "data-switch-register"
+                registerForm?.classList.remove(
+                    "hidden"
                 );
 
-                authSwitchButton.setAttribute(
-                    "data-switch-login",
-                    ""
+                if (authTitle) {
+                    authTitle.textContent =
+                        "Create your space";
+                }
+
+                if (authSubtitle) {
+                    authSubtitle.textContent =
+                        "A place for honest feelings and meaningful connections.";
+                }
+
+                if (authSwitchText) {
+                    authSwitchText.textContent =
+                        "Already have an account?";
+                }
+
+                if (authSwitchButton) {
+
+                    authSwitchButton.textContent =
+                        "Log in";
+
+                    authSwitchButton.removeAttribute(
+                        "data-switch-register"
+                    );
+
+                    authSwitchButton.setAttribute(
+                        "data-switch-login",
+                        ""
+                    );
+                }
+
+                return;
+            }
+
+
+            if (mode === "forgot") {
+
+                forgotForm?.classList.remove(
+                    "hidden"
                 );
 
-            } else if (mode === "forgot") {
+                if (authTitle) {
+                    authTitle.textContent =
+                        "Reset your password";
+                }
 
-                forgotForm.classList.remove("hidden");
+                if (authSubtitle) {
+                    authSubtitle.textContent =
+                        "We'll send a secure password reset link to your email.";
+                }
 
-                authTitle.textContent =
-                    "Reset your password";
+                if (authSwitchText) {
+                    authSwitchText.textContent =
+                        "Remembered your password?";
+                }
 
-                authSubtitle.textContent =
-                    "We'll send a secure password reset link to your email.";
+                if (authSwitchButton) {
 
-                authSwitchText.textContent =
-                    "Remembered your password?";
+                    authSwitchButton.textContent =
+                        "Log in";
 
-                authSwitchButton.textContent =
-                    "Log in";
+                    authSwitchButton.removeAttribute(
+                        "data-switch-register"
+                    );
 
-                authSwitchButton.removeAttribute(
-                    "data-switch-register"
-                );
+                    authSwitchButton.setAttribute(
+                        "data-switch-login",
+                        ""
+                    );
+                }
 
-                authSwitchButton.removeAttribute(
-                    "data-switch-login"
-                );
+                return;
+            }
 
-                authSwitchButton.setAttribute(
-                    "data-switch-login",
-                    ""
-                );
 
-            } else {
+            loginForm?.classList.remove(
+                "hidden"
+            );
 
-                loginForm.classList.remove("hidden");
-
+            if (authTitle) {
                 authTitle.textContent =
                     "Welcome back";
+            }
 
+            if (authSubtitle) {
                 authSubtitle.textContent =
                     "Sign in to continue your journey.";
+            }
 
+            if (authSwitchText) {
                 authSwitchText.textContent =
                     "New here?";
+            }
+
+            if (authSwitchButton) {
 
                 authSwitchButton.textContent =
                     "Create an account";
@@ -1328,12 +1392,21 @@
         }
 
 
-        function openAuth(mode = "login") {
+        /* =====================================================
+           OPEN AUTH
+           ===================================================== */
+
+        function openAuth(
+            mode = "login"
+        ) {
 
             setAuthMode(mode);
 
-            authModal.classList.add("visible");
-            authModal.setAttribute(
+            authModal?.classList.add(
+                "visible"
+            );
+
+            authModal?.setAttribute(
                 "aria-hidden",
                 "false"
             );
@@ -1344,24 +1417,41 @@
 
             window.setTimeout(() => {
 
+                let selector;
+
+                if (mode === "register") {
+                    selector =
+                        "#registerForm input:not([type='checkbox'])";
+                } else if (mode === "forgot") {
+                    selector =
+                        "#forgotForm input";
+                } else {
+                    selector =
+                        "#loginForm input";
+                }
+
                 const firstInput =
-                    authModal.querySelector(
-                        "input:not([type='checkbox'])"
+                    authModal?.querySelector(
+                        selector
                     );
 
-                if (firstInput) {
-                    firstInput.focus();
-                }
+                firstInput?.focus();
 
             }, 100);
         }
 
 
+        /* =====================================================
+           CLOSE AUTH
+           ===================================================== */
+
         function closeAuth() {
 
-            authModal.classList.remove("visible");
+            authModal?.classList.remove(
+                "visible"
+            );
 
-            authModal.setAttribute(
+            authModal?.setAttribute(
                 "aria-hidden",
                 "true"
             );
@@ -1371,6 +1461,10 @@
             );
         }
 
+
+        /* =====================================================
+           AUTH OPEN BUTTONS
+           ===================================================== */
 
         document.querySelectorAll(
             "[data-open-login]"
@@ -1406,19 +1500,32 @@
         });
 
 
+        /* =====================================================
+           CLOSE BUTTONS
+           ===================================================== */
+
         document.querySelectorAll(
             "[data-close-auth]"
         ).forEach(button => {
 
             button.addEventListener(
                 "click",
-                closeAuth
+                event => {
+
+                    event.preventDefault();
+
+                    closeAuth();
+                }
             );
 
         });
 
 
-        authModal.addEventListener(
+        /* =====================================================
+           BACKDROP CLOSE
+           ===================================================== */
+
+        authModal?.addEventListener(
             "click",
             event => {
 
@@ -1432,20 +1539,31 @@
         );
 
 
+        /* =====================================================
+           ESCAPE
+           ===================================================== */
+
         document.addEventListener(
             "keydown",
             event => {
 
                 if (
                     event.key === "Escape" &&
-                    authModal.classList.contains("visible")
+                    authModal?.classList.contains(
+                        "visible"
+                    )
                 ) {
+
                     closeAuth();
                 }
 
             }
         );
 
+
+        /* =====================================================
+           AUTH MODE SWITCH
+           ===================================================== */
 
         document.addEventListener(
             "click",
@@ -1466,29 +1584,38 @@
                         "[data-open-forgot]"
                     );
 
+
                 if (registerTrigger) {
 
                     event.preventDefault();
 
-                    setAuthMode("register");
+                    setAuthMode(
+                        "register"
+                    );
 
                     return;
                 }
+
 
                 if (loginTrigger) {
 
                     event.preventDefault();
 
-                    setAuthMode("login");
+                    setAuthMode(
+                        "login"
+                    );
 
                     return;
                 }
+
 
                 if (forgotTrigger) {
 
                     event.preventDefault();
 
-                    setAuthMode("forgot");
+                    setAuthMode(
+                        "forgot"
+                    );
 
                     return;
                 }
@@ -1497,52 +1624,76 @@
         );
 
 
-        /*
-         * We deliberately do not fake authentication here.
-         * Firebase Auth will be connected in js/auth.js.
-         */
+        /* =====================================================
+           AUTH STATE
+           ===================================================== */
 
-        loginForm.addEventListener(
-            "submit",
+        window.addEventListener(
+            "lmf-auth-state-changed",
             event => {
 
-                event.preventDefault();
+                const user =
+                    event.detail?.user || null;
 
-                showToast(
-                    "Authentication is being connected securely.",
-                    "success"
-                );
+                authStateReady = true;
+
+
+                /*
+                 * If a valid authenticated user is already
+                 * present on the landing page, continue into
+                 * the application.
+                 */
+                if (
+                    user &&
+                    window.location.pathname.endsWith(
+                        "/index.html"
+                    )
+                ) {
+
+                    window.location.replace(
+                        "./app.html"
+                    );
+
+                    return;
+                }
+
+
+                /*
+                 * When logged out, keep the public
+                 * landing page available.
+                 */
+                if (!user) {
+                    window.__LMF_AUTH_READY__ = true;
+                }
+
             }
         );
 
 
-        registerForm.addEventListener(
-            "submit",
+        /* =====================================================
+           FIREBASE AUTH ERROR EVENT
+           ===================================================== */
+
+        window.addEventListener(
+            "lmf-auth-error",
             event => {
 
-                event.preventDefault();
+                const message =
+                    event.detail?.message ||
+                    "Authentication failed. Please try again.";
 
                 showToast(
-                    "Account creation is being connected securely.",
-                    "success"
+                    message,
+                    "error"
                 );
+
             }
         );
 
 
-        forgotForm.addEventListener(
-            "submit",
-            event => {
-
-                event.preventDefault();
-
-                showToast(
-                    "Password reset will be handled through Firebase Auth.",
-                    "success"
-                );
-            }
-        );
-
+        /* =====================================================
+           PRIVACY NOTICE
+           ===================================================== */
 
         if (privacyDismiss) {
 
@@ -1550,7 +1701,7 @@
                 "click",
                 () => {
 
-                    privacyNotice.classList.add(
+                    privacyNotice?.classList.add(
                         "dismissed"
                     );
 
@@ -1559,6 +1710,10 @@
 
         }
 
+
+        /* =====================================================
+           LOADER
+           ===================================================== */
 
         window.addEventListener(
             "load",
@@ -1572,11 +1727,9 @@
                                 "appLoader"
                             );
 
-                        if (loader) {
-                            loader.classList.add(
-                                "loaded"
-                            );
-                        }
+                        loader?.classList.add(
+                            "loaded"
+                        );
 
                     },
                     450
@@ -1585,7 +1738,41 @@
             }
         );
 
+
+        /* =====================================================
+           SERVICE WORKER
+           ===================================================== */
+
+        if (
+            "serviceWorker" in navigator
+        ) {
+
+            window.addEventListener(
+                "load",
+                () => {
+
+                    navigator.serviceWorker
+                        .register(
+                            "./sw.js",
+                            {
+                                scope: "./"
+                            }
+                        )
+                        .catch(() => {
+                            /*
+                             * PWA offline support is optional.
+                             * Authentication and application
+                             * functionality must not depend
+                             * on service-worker registration.
+                             */
+                        });
+
+                }
+            );
+
+        }
+
     </script>
 
 </body>
-  </html>
+                        </html>
